@@ -1,6 +1,6 @@
 [package]
 name = "finalspark-rs"
-version = "0.1.2"
+version = "0.1.3"
 edition = "2021"
 authors = ["0xCheez", "MaidenLabs"]
 description = "A Rust library for live data recording from MEA devices."
@@ -10,7 +10,7 @@ repository = "https://github.com/maidenlabs/finalspark-rs"
 documentation = "https://maidenlabs.ai"
 readme = "README.md"
 keywords = ["live-data", "MEA", "recording", "rust"]
-categories = ["science", "data-processing", "visualization"]
+categories = ["science", "science::neuroscience"]
 
 [dependencies]
 tokio = { version = "1", features = ["full"] }
