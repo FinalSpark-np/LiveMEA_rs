@@ -1,0 +1,24 @@
+[package]
+name = "finalspark-rs"
+version = "0.1.0"
+edition = "2021"
+authors = ["0xCheez", "MaidenLabs"]
+description = "A Rust library for live data recording from MEA devices."
+license = "MIT"
+homepage = "https://maidenlabs.ai"
+repository = "https://github.com/maidenlabs/finalspark-rs"
+documentation = "https://maidenlabs.ai"
+readme = "README.md"
+keywords = ["live-data", "MEA", "recording", "rust"]
+categories = ["science", "data-processing", "biotechnology"]
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+tokio-tungstenite = { version = "0.20", features = ["native-tls"] }
+tokio-native-tls = "0.3"
+futures-util = "0.3"  # Add this for StreamExt & SinkExt
+url = "2.5"  # Add this for Url
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+chrono = "0.4"
+socket2 = "0.4"
