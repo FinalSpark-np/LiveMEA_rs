@@ -3,10 +3,10 @@
 FinalSpark-RS is a Rust library for live data recording from MEA (Microelectrode Array) devices. It enables real-time data acquisition and processing from MEA devices over a network connection.
 
 ## Features
-- Connects to an MEA server to retrieve live data.
-- Supports both single-sample and multi-sample data recording.
-- Uses `tokio` for asynchronous networking.
-- Parses and structures incoming data into a `LiveData` format.
+- Connects to an MEA server to retrieve live data
+- Supports both single-sample and multi-sample data recording
+- Uses `tokio` for asynchronous networking
+- Structured data output with timestamps and electrode readings
 
 ## Installation
 
@@ -15,58 +15,70 @@ Add `finalspark-rs` to your `Cargo.toml`:
 ```toml
 [dependencies]
 finalspark-rs = { git = "https://github.com/maidenlabs/finalspark-rs.git" }
+tokio = { version = "1.0", features = ["full"] }
 ```
-
-Or clone the repository and use it as a local dependency.
 
 ## Usage
 
+### Basic Setup
+
 ```rust
 use finalspark_rs::LiveMEA;
-use tokio::runtime::Runtime;
 
-fn main() {
-    let rt = Runtime::new().unwrap();
-    let live_mea = LiveMEA::new(1);
-
-    rt.block_on(async {
-        match live_mea.record_sample().await {
-            Ok(data) => println!("Single sample: {:?}", data),
-            Err(e) => eprintln!("Error recording single sample: {:?}", e),
-        }
-    });
+#[tokio::main]
+async fn main() {
+    let live_mea = LiveMEA::new();
+    
+    // Record a single sample
+    match live_mea.record_sample(1).await {
+        Ok(data) => {
+            println!("Recorded sample with timestamp: {}", data.timestamp);
+            println!("Number of electrodes: {}", data.data.len());
+            println!("Samples per electrode: {}", data.data[0].len());
+        },
+        Err(e) => eprintln!("Error recording sample: {}", e),
+    }
 }
 ```
 
 ### Recording Multiple Samples
+
 ```rust
 use finalspark_rs::LiveMEA;
-use tokio::runtime::Runtime;
 
-fn main() {
-    let rt = Runtime::new().unwrap();
-    let live_mea = LiveMEA::new(1);
+#[tokio::main]
+async fn main() {
+    let live_mea = LiveMEA::new();
 
-    rt.block_on(async {
-        match live_mea.record_n_samples(5).await {
-            Ok(data) => println!("Multiple samples: {:?}", data),
-            Err(e) => eprintln!("Error recording multiple samples: {:?}", e),
-        }
-    });
+    match live_mea.record_n_samples(1, 5).await {
+        Ok(samples) => {
+            println!("Successfully recorded {} samples", samples.len());
+            for (i, sample) in samples.iter().enumerate() {
+                println!("Sample {} timestamp: {}", i + 1, sample.timestamp);
+            }
+        },
+        Err(e) => eprintln!("Error recording samples: {}", e),
+    }
 }
 ```
 
+## Data Structure
+
+The `LiveData` struct contains:
+- `timestamp`: String in RFC3339 format representing when the sample was recorded
+- `data`: 2D vector containing electrode readings where:
+  - First dimension: 32 electrodes
+  - Second dimension: 4096 samples per electrode
+
 ## Dependencies
-This library relies on the following Rust crates:
-- `tokio` (for async networking)
-- `socket2` (for low-level socket handling)
-- `serde` & `serde_json` (for data serialization)
-- `chrono` (for timestamping data)
-- `tokio-tungstenite` (for WebSocket communication)
+- `tokio` - Async runtime and networking
+- `serde` & `serde_json` - Data serialization
+- `chrono` - Timestamp handling
+- `tokio-tungstenite` - WebSocket communication
+- `url` - URL parsing and handling
 
 ## License
 This project is licensed under the MIT License. See `LICENSE` for details.
 
 ## Contributing
 Contributions are welcome! Please submit an issue or pull request on [GitHub](https://github.com/maidenlabs/finalspark-rs).
-
