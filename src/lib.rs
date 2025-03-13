@@ -185,7 +185,21 @@ impl LiveMEA {
                         .map(|chunk| f32::from_ne_bytes(chunk.try_into().unwrap()))
                         .collect::<Vec<f32>>();
 
-                    let start_idx = (mea_index as usize) * 32 * 4096;
+                    // Check if we have data for one MEA (32 electrodes) or all MEAs (128 electrodes)
+                    let start_idx = if raw.len() == 32 * 4096 {
+                        0 // Single MEA data
+                    } else if raw.len() == 128 * 4096 {
+                        (mea_index as usize) * 32 * 4096 // Full dataset
+                    } else {
+                        return Err(format!(
+                            "Unexpected data size: got {} values, expected {} or {}",
+                            raw.len(),
+                            32 * 4096,
+                            128 * 4096
+                        )
+                        .into());
+                    };
+
                     let elec_data: Vec<Vec<f32>> = (0..32)
                         .map(|i| raw[start_idx + i * 4096..start_idx + (i + 1) * 4096].to_vec())
                         .collect();
@@ -251,6 +265,7 @@ impl LiveMEA {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::time::Instant;
 
     #[test]
     fn test_validate_mea_id() {
@@ -260,7 +275,23 @@ mod tests {
         assert!(LiveMEA::validate_mea_id(5).is_err());
     }
 
-    use std::time::Instant;
+    /// Helper function to validate electrode data structure
+    fn validate_electrode_data(data: &LiveData) {
+        assert_eq!(data.data.len(), 32, "Expected 32 electrodes");
+        assert_eq!(
+            data.data[0].len(),
+            4096,
+            "Expected 4096 samples per electrode"
+        );
+
+        // Validate data contains actual values
+        let sum: f32 = data
+            .data
+            .iter()
+            .flat_map(|electrode| electrode.iter())
+            .sum();
+        assert!(sum != 0.0, "Data appears to be all zeros");
+    }
 
     #[tokio::test]
     async fn test_single_sample_recording() {
@@ -319,5 +350,85 @@ mod tests {
         let live_mea = LiveMEA::new();
         let result = live_mea.record_sample(5).await;
         assert!(result.is_err(), "Expected error for invalid MEA ID");
+    }
+
+    #[tokio::test]
+    async fn test_all_meas_single_sample() {
+        let live_mea = LiveMEA::new();
+
+        for mea_id in 1..=4 {
+            let start = Instant::now();
+            println!("\nTesting MEA {}", mea_id);
+
+            match live_mea.record_sample(mea_id).await {
+                Ok(data) => {
+                    println!("✓ MEA {} recorded in {:?}", mea_id, start.elapsed());
+                    validate_electrode_data(&data);
+                }
+                Err(e) => panic!("Failed to record from MEA {}: {:?}", mea_id, e),
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn test_all_meas_multiple_samples() {
+        let live_mea = LiveMEA::new();
+        let samples_per_mea = 2;
+
+        for mea_id in 1..=4 {
+            let start = Instant::now();
+            println!("\nTesting MEA {} with {} samples", mea_id, samples_per_mea);
+
+            match live_mea.record_n_samples(mea_id, samples_per_mea).await {
+                Ok(samples) => {
+                    println!(
+                        "✓ MEA {} recorded {} samples in {:?}",
+                        mea_id,
+                        samples.len(),
+                        start.elapsed()
+                    );
+
+                    assert_eq!(
+                        samples.len(),
+                        samples_per_mea,
+                        "Wrong number of samples from MEA {}",
+                        mea_id
+                    );
+
+                    for (i, sample) in samples.iter().enumerate() {
+                        println!("Validating MEA {} sample {}", mea_id, i + 1);
+                        validate_electrode_data(sample);
+                    }
+                }
+                Err(e) => panic!("Failed to record from MEA {}: {:?}", mea_id, e),
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn test_sequential_recordings() {
+        let live_mea = LiveMEA::new();
+        let total_start = Instant::now();
+
+        // Record one sample from each MEA in sequence
+        for iteration in 1..=3 {
+            println!("\nIteration {}", iteration);
+
+            for mea_id in 1..=4 {
+                let start = Instant::now();
+                match live_mea.record_sample(mea_id).await {
+                    Ok(data) => {
+                        println!("✓ MEA {} recorded in {:?}", mea_id, start.elapsed());
+                        validate_electrode_data(&data);
+                    }
+                    Err(e) => panic!(
+                        "Failed to record from MEA {} on iteration {}: {:?}",
+                        mea_id, iteration, e
+                    ),
+                }
+            }
+        }
+
+        println!("\nAll recordings completed in {:?}", total_start.elapsed());
     }
 }
