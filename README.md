@@ -18,7 +18,7 @@ Add `finalspark-rs` to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-finalspark-rs = { git = "https://github.com/maidenlabs/finalspark-rs.git" }
+finalspark-rs = { git = "https://github.com/FinalSpark-np/LiveMEA_rs.git" }
 tokio = { version = "1.0", features = ["full"] }
 ```
 
