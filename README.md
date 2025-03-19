@@ -2,6 +2,10 @@
 
 FinalSpark-RS is a Rust library for live data recording from MEA (Microelectrode Array) devices. It enables real-time data acquisition and processing from MEA devices over a network connection.
 
+## Authors: Maiden Labs [[github](https://github.com/maidenlabs)]
+
+Maiden Labs is a non profit user research lab committed to open-source scientific discovery through biocomputing. Utilizing decentralized technologies, we improve access to biocomputing research, advancing interdisciplinary AI and biocomputing related efforts for greater scientific impact and innovation.
+
 ## Features
 - Connects to an MEA server to retrieve live data
 - Supports both single-sample and multi-sample data recording
