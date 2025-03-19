@@ -1,6 +1,6 @@
-# FinalSpark-RS
+# LiveMEA_rs
 
-FinalSpark-RS is a Rust library for live data recording from MEA (Microelectrode Array) devices. It enables real-time data acquisition and processing from MEA devices over a network connection.
+LiveMEA_rs is a Rust library for live data recording from MEA (Microelectrode Array) devices of FinalSpark. It enables real-time data acquisition and processing from MEA devices over a network connection.
 
 ## Authors: Maiden Labs [[github](https://github.com/maidenlabs)]
 
